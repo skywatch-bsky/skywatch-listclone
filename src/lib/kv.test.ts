@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { Job } from './kv';
+import { getKvClient } from './kv';
 
 describe('Job type definitions', () => {
   it('should enforce required job fields', () => {
@@ -89,5 +90,14 @@ describe('Job type definitions', () => {
     expect(jobWithOptionals.destListUri).toBeDefined();
     expect(jobWithOptionals.completedAt).toBeDefined();
     expect(jobWithOptionals.errors).toHaveLength(1);
+  });
+});
+
+describe('getKvClient', () => {
+  it('should return a KV client instance', () => {
+    const client = getKvClient();
+
+    expect(client).toBeDefined();
+    expect(typeof client).toBe('object');
   });
 });

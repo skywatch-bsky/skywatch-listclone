@@ -1,3 +1,5 @@
+import { kv } from '@vercel/kv';
+
 export type JobStatus = 'pending' | 'processing' | 'completed' | 'failed';
 
 export interface JobSession {
@@ -35,4 +37,8 @@ export interface Job {
   errors: JobError[];
   createdAt: string;
   completedAt?: string;
+}
+
+export function getKvClient() {
+  return kv;
 }
