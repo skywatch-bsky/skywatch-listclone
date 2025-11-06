@@ -27,3 +27,21 @@ export async function resolveHandle(agent: BskyAgent, handleOrDid: string): Prom
   const response = await agent.resolveHandle({ handle: handleOrDid });
   return response.data.did;
 }
+
+export async function fetchListMembers(agent: BskyAgent, listUri: string): Promise<string[]> {
+  const members: string[] = [];
+  let cursor: string | undefined;
+
+  do {
+    const response = await agent.app.bsky.graph.getList({
+      list: listUri,
+      limit: 100,
+      cursor
+    });
+
+    members.push(...response.data.items.map(item => item.subject.did));
+    cursor = response.data.cursor;
+  } while (cursor);
+
+  return members;
+}
