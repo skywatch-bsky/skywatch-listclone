@@ -95,8 +95,12 @@ export async function createList(
   description?: string,
   purpose: string = 'app.bsky.graph.defs#modlist'
 ): Promise<string> {
+  if (!agent.session) {
+    throw new Error('Agent must be authenticated to create lists');
+  }
+
   const response = await agent.com.atproto.repo.createRecord({
-    repo: agent.session!.did,
+    repo: agent.session.did,
     collection: 'app.bsky.graph.list',
     record: {
       $type: 'app.bsky.graph.list',
