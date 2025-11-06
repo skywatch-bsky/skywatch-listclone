@@ -45,3 +45,21 @@ export async function fetchListMembers(agent: BskyAgent, listUri: string): Promi
 
   return members;
 }
+
+export async function getUserFollows(agent: BskyAgent, did: string): Promise<string[]> {
+  const follows: string[] = [];
+  let cursor: string | undefined;
+
+  do {
+    const response = await agent.app.bsky.graph.getFollows({
+      actor: did,
+      limit: 100,
+      cursor
+    });
+
+    follows.push(...response.data.follows.map(follow => follow.did));
+    cursor = response.data.cursor;
+  } while (cursor);
+
+  return follows;
+}

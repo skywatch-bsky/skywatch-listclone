@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseListUrl, resolveHandle, fetchListMembers } from './atproto';
+import { parseListUrl, resolveHandle, fetchListMembers, getUserFollows } from './atproto';
 import { BskyAgent } from '@atproto/api';
 
 describe('parseListUrl', () => {
@@ -82,5 +82,20 @@ describe('fetchListMembers', () => {
 
     // Just verify we get an array back - pagination is tested by implementation
     expect(Array.isArray(members)).toBe(true);
+  });
+});
+
+describe('getUserFollows', () => {
+  it('should fetch all DIDs that a user follows', async () => {
+    const agent = new BskyAgent({ service: 'https://public.api.bsky.app' });
+    const userDid = 'did:plc:z72i7hdynmk6r22z27h6tvur';
+
+    const follows = await getUserFollows(agent, userDid);
+
+    expect(Array.isArray(follows)).toBe(true);
+    expect(follows.length).toBeGreaterThan(0);
+    follows.forEach(did => {
+      expect(did).toMatch(/^did:plc:[a-z0-9]+$/);
+    });
   });
 });
