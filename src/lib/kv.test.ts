@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { Job } from './kv';
-import { getKvClient } from './kv';
+import { getKvClient, createJob } from './kv';
 
 describe('Job type definitions', () => {
   it('should enforce required job fields', () => {
@@ -99,5 +99,33 @@ describe('getKvClient', () => {
 
     expect(client).toBeDefined();
     expect(typeof client).toBe('object');
+  });
+});
+
+describe('createJob', () => {
+  it('should create a job with UUID and store in KV', async () => {
+    const jobData = {
+      session: {
+        did: 'did:plc:test123',
+        handle: 'test.bsky.social',
+        accessJwt: 'access.token',
+        refreshJwt: 'refresh.token'
+      },
+      sourceListUri: 'at://did:plc:test/app.bsky.graph.list/abc',
+      destListName: 'Test List',
+      filters: {
+        excludeFollows: true,
+        excludeMutuals: false,
+        excludeListUris: []
+      }
+    };
+
+    const job = await createJob(jobData);
+
+    expect(job.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+    expect(job.status).toBe('pending');
+    expect(job.progress).toEqual({ current: 0, total: 0 });
+    expect(job.errors).toEqual([]);
+    expect(job.createdAt).toBeTruthy();
   });
 });

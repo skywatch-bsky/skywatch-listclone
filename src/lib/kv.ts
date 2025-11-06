@@ -42,3 +42,31 @@ export interface Job {
 export function getKvClient() {
   return kv;
 }
+
+export interface CreateJobData {
+  session: JobSession;
+  sourceListUri: string;
+  destListName: string;
+  filters: JobFilters;
+}
+
+export async function createJob(data: CreateJobData): Promise<Job> {
+  const job: Job = {
+    id: crypto.randomUUID(),
+    status: 'pending',
+    session: data.session,
+    sourceListUri: data.sourceListUri,
+    destListName: data.destListName,
+    filters: data.filters,
+    progress: { current: 0, total: 0 },
+    errors: [],
+    createdAt: new Date().toISOString()
+  };
+
+  const client = getKvClient();
+  const ttl = 60 * 60 * 24 * 7;
+
+  await client.set(`job:${job.id}`, JSON.stringify(job), { ex: ttl });
+
+  return job;
+}
