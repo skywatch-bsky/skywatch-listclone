@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseListUrl, resolveHandle, fetchListMembers, getUserFollows, getUserMutuals } from './atproto';
+import { parseListUrl, resolveHandle, fetchListMembers, getUserFollows, getUserMutuals, createList } from './atproto';
 import { AtpAgent } from '@atproto/api';
 
 describe('parseListUrl', () => {
@@ -114,5 +114,48 @@ describe('getUserMutuals', () => {
     mutuals.forEach(did => {
       expect(did).toMatch(/^did:plc:[a-z0-9]+$/);
     });
+  });
+});
+
+describe('createList', () => {
+  it('should create a moderation list and return AT-URI', async () => {
+    // Note: This test requires authentication, will be skipped in CI
+    // For local testing, set BSKY_HANDLE and BSKY_PASSWORD env vars
+    if (!process.env.BSKY_HANDLE || !process.env.BSKY_PASSWORD) {
+      console.log('Skipping createList test - no credentials provided');
+      return;
+    }
+
+    const agent = new AtpAgent({ service: 'https://bsky.social' });
+    await agent.login({
+      identifier: process.env.BSKY_HANDLE,
+      password: process.env.BSKY_PASSWORD
+    });
+
+    const uri = await createList(
+      agent,
+      'Test List',
+      'Test description',
+      'app.bsky.graph.defs#modlist'
+    );
+
+    expect(uri).toMatch(/^at:\/\/did:plc:[a-z0-9]+\/app\.bsky\.graph\.list\/[a-z0-9]+$/);
+  });
+
+  it('should create list with minimal params (name only)', async () => {
+    if (!process.env.BSKY_HANDLE || !process.env.BSKY_PASSWORD) {
+      console.log('Skipping createList minimal test - no credentials provided');
+      return;
+    }
+
+    const agent = new AtpAgent({ service: 'https://bsky.social' });
+    await agent.login({
+      identifier: process.env.BSKY_HANDLE,
+      password: process.env.BSKY_PASSWORD
+    });
+
+    const uri = await createList(agent, 'Minimal Test List');
+
+    expect(uri).toMatch(/^at:\/\/did:plc:[a-z0-9]+\/app\.bsky\.graph\.list\/[a-z0-9]+$/);
   });
 });

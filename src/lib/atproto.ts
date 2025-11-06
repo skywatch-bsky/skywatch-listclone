@@ -88,3 +88,24 @@ export async function getUserMutuals(agent: AtpAgent, did: string): Promise<stri
 
   return mutuals;
 }
+
+export async function createList(
+  agent: AtpAgent,
+  name: string,
+  description?: string,
+  purpose: string = 'app.bsky.graph.defs#modlist'
+): Promise<string> {
+  const response = await agent.com.atproto.repo.createRecord({
+    repo: agent.session!.did,
+    collection: 'app.bsky.graph.list',
+    record: {
+      $type: 'app.bsky.graph.list',
+      purpose,
+      name,
+      description: description || '',
+      createdAt: new Date().toISOString()
+    }
+  });
+
+  return response.data.uri;
+}
