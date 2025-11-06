@@ -1,4 +1,4 @@
-import { BskyAgent } from '@atproto/api';
+import { AtpAgent } from '@atproto/api';
 
 export interface ParsedListUrl {
   handle: string;
@@ -19,7 +19,7 @@ export function parseListUrl(url: string): ParsedListUrl {
   };
 }
 
-export async function resolveHandle(agent: BskyAgent, handleOrDid: string): Promise<string> {
+export async function resolveHandle(agent: AtpAgent, handleOrDid: string): Promise<string> {
   if (handleOrDid.startsWith('did:')) {
     return handleOrDid;
   }
@@ -28,7 +28,7 @@ export async function resolveHandle(agent: BskyAgent, handleOrDid: string): Prom
   return response.data.did;
 }
 
-export async function fetchListMembers(agent: BskyAgent, listUri: string): Promise<string[]> {
+export async function fetchListMembers(agent: AtpAgent, listUri: string): Promise<string[]> {
   const members: string[] = [];
   let cursor: string | undefined;
 
@@ -46,7 +46,7 @@ export async function fetchListMembers(agent: BskyAgent, listUri: string): Promi
   return members;
 }
 
-export async function getUserFollows(agent: BskyAgent, did: string): Promise<string[]> {
+export async function getUserFollows(agent: AtpAgent, did: string): Promise<string[]> {
   const follows: string[] = [];
   let cursor: string | undefined;
 
@@ -64,7 +64,7 @@ export async function getUserFollows(agent: BskyAgent, did: string): Promise<str
   return follows;
 }
 
-export async function getUserMutuals(agent: BskyAgent, did: string): Promise<string[]> {
+export async function getUserMutuals(agent: AtpAgent, did: string): Promise<string[]> {
   const follows = await getUserFollows(agent, did);
   const followSet = new Set(follows);
 

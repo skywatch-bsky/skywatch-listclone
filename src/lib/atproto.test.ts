@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { parseListUrl, resolveHandle, fetchListMembers, getUserFollows, getUserMutuals } from './atproto';
-import { BskyAgent } from '@atproto/api';
+import { AtpAgent } from '@atproto/api';
 
 describe('parseListUrl', () => {
   it('should parse valid Bluesky list URL to AT-URI', () => {
@@ -31,14 +31,14 @@ describe('parseListUrl', () => {
 
 describe('resolveHandle', () => {
   it('should resolve handle to DID', async () => {
-    const agent = new BskyAgent({ service: 'https://public.api.bsky.app' });
+    const agent = new AtpAgent({ service: 'https://public.api.bsky.app' });
     const did = await resolveHandle(agent, 'bsky.app');
 
     expect(did).toMatch(/^did:plc:[a-z0-9]+$/);
   });
 
   it('should return DID unchanged if already a DID', async () => {
-    const agent = new BskyAgent({ service: 'https://public.api.bsky.app' });
+    const agent = new AtpAgent({ service: 'https://public.api.bsky.app' });
     const inputDid = 'did:plc:abc123xyz';
     const did = await resolveHandle(agent, inputDid);
 
@@ -46,7 +46,7 @@ describe('resolveHandle', () => {
   });
 
   it('should throw error for invalid handle', async () => {
-    const agent = new BskyAgent({ service: 'https://public.api.bsky.app' });
+    const agent = new AtpAgent({ service: 'https://public.api.bsky.app' });
 
     await expect(resolveHandle(agent, 'invalid-handle-that-does-not-exist.invalid'))
       .rejects.toThrow();
@@ -55,7 +55,7 @@ describe('resolveHandle', () => {
 
 describe('fetchListMembers', () => {
   it('should fetch members from a list', async () => {
-    const agent = new BskyAgent({ service: 'https://public.api.bsky.app' });
+    const agent = new AtpAgent({ service: 'https://public.api.bsky.app' });
     // Using offline.mountainherder.xyz's list from the example URL in the plan
     const url = 'https://bsky.app/profile/offline.mountainherder.xyz/lists/3l7g3f6uyqo23';
     const parsed = parseListUrl(url);
@@ -71,7 +71,7 @@ describe('fetchListMembers', () => {
   });
 
   it('should handle pagination by fetching all members', async () => {
-    const agent = new BskyAgent({ service: 'https://public.api.bsky.app' });
+    const agent = new AtpAgent({ service: 'https://public.api.bsky.app' });
     // Using a list that likely has multiple pages
     const url = 'https://bsky.app/profile/offline.mountainherder.xyz/lists/3l7g3f6uyqo23';
     const parsed = parseListUrl(url);
@@ -87,7 +87,7 @@ describe('fetchListMembers', () => {
 
 describe('getUserFollows', () => {
   it('should fetch all DIDs that a user follows', async () => {
-    const agent = new BskyAgent({ service: 'https://public.api.bsky.app' });
+    const agent = new AtpAgent({ service: 'https://public.api.bsky.app' });
     const userDid = 'did:plc:z72i7hdynmk6r22z27h6tvur';
 
     const follows = await getUserFollows(agent, userDid);
@@ -102,7 +102,7 @@ describe('getUserFollows', () => {
 
 describe('getUserMutuals', () => {
   it('should return an array of DIDs', async () => {
-    const agent = new BskyAgent({ service: 'https://public.api.bsky.app' });
+    const agent = new AtpAgent({ service: 'https://public.api.bsky.app' });
     // Note: This test uses a real account but the implementation is correct
     // The test just verifies basic functionality
     const userDid = 'did:plc:z72i7hdynmk6r22z27h6tvur';
