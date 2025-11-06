@@ -82,3 +82,25 @@ export async function getJob(id: string): Promise<Job | null> {
 
   return JSON.parse(data) as Job;
 }
+
+export type JobUpdate = Partial<Omit<Job, 'id' | 'createdAt'>>;
+
+export async function updateJob(id: string, updates: JobUpdate): Promise<Job | null> {
+  const job = await getJob(id);
+
+  if (!job) {
+    return null;
+  }
+
+  const updatedJob: Job = {
+    ...job,
+    ...updates
+  };
+
+  const client = getKvClient();
+  const ttl = 60 * 60 * 24 * 7;
+
+  await client.set(`job:${id}`, JSON.stringify(updatedJob), { ex: ttl });
+
+  return updatedJob;
+}

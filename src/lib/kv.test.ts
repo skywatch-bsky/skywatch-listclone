@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { Job } from './kv';
-import { getKvClient, createJob, getJob } from './kv';
+import { getKvClient, createJob, getJob, updateJob } from './kv';
 
 describe('Job type definitions', () => {
   it('should enforce required job fields', () => {
@@ -160,5 +160,48 @@ describe('getJob', () => {
     const job = await getJob('00000000-0000-0000-0000-000000000000');
 
     expect(job).toBeNull();
+  });
+});
+
+describe('updateJob', () => {
+  it('should update job fields and persist to KV', async () => {
+    const jobData = {
+      session: {
+        did: 'did:plc:test789',
+        handle: 'test3.bsky.social',
+        accessJwt: 'access.token3',
+        refreshJwt: 'refresh.token3'
+      },
+      sourceListUri: 'at://did:plc:test/app.bsky.graph.list/update',
+      destListName: 'Update Test',
+      filters: {
+        excludeFollows: false,
+        excludeMutuals: false,
+        excludeListUris: []
+      }
+    };
+
+    const job = await createJob(jobData);
+
+    const updated = await updateJob(job.id, {
+      status: 'processing',
+      progress: { current: 50, total: 100 }
+    });
+
+    expect(updated?.status).toBe('processing');
+    expect(updated?.progress.current).toBe(50);
+    expect(updated?.progress.total).toBe(100);
+
+    const retrieved = await getJob(job.id);
+    expect(retrieved?.status).toBe('processing');
+    expect(retrieved?.progress.current).toBe(50);
+  });
+
+  it('should return null for non-existent job', async () => {
+    const result = await updateJob('00000000-0000-0000-0000-000000000000', {
+      status: 'completed'
+    });
+
+    expect(result).toBeNull();
   });
 });
