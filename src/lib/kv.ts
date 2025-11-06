@@ -1,4 +1,5 @@
 import { kv } from '@vercel/kv';
+import { randomUUID } from 'crypto';
 
 export type JobStatus = 'pending' | 'processing' | 'completed' | 'failed';
 
@@ -52,7 +53,7 @@ export interface CreateJobData {
 
 export async function createJob(data: CreateJobData): Promise<Job> {
   const job: Job = {
-    id: crypto.randomUUID(),
+    id: randomUUID(),
     status: 'pending',
     session: data.session,
     sourceListUri: data.sourceListUri,
