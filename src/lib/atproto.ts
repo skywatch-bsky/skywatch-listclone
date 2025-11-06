@@ -114,34 +114,59 @@ export async function createList(
   return response.data.uri;
 }
 
+export interface AddListMembersResult {
+  successful: number;
+  failed: number;
+  errors: Array<{ did: string; error: string }>;
+}
+
 export async function addListMembers(
   agent: AtpAgent,
   listUri: string,
   memberDids: string[],
   batchSize: number = 25
-): Promise<void> {
+): Promise<AddListMembersResult> {
   if (!agent.session) {
     throw new Error('Agent must be authenticated to add list members');
   }
 
+  const result: AddListMembersResult = {
+    successful: 0,
+    failed: 0,
+    errors: []
+  };
+
   if (memberDids.length === 0) {
-    return;
+    return result;
   }
 
+  // Process in batches
   for (let i = 0; i < memberDids.length; i += batchSize) {
     const batch = memberDids.slice(i, i + batchSize);
 
+    // Add each member in the batch
     for (const did of batch) {
-      await agent.com.atproto.repo.createRecord({
-        repo: agent.session.did,
-        collection: 'app.bsky.graph.listitem',
-        record: {
-          $type: 'app.bsky.graph.listitem',
-          subject: did,
-          list: listUri,
-          createdAt: new Date().toISOString()
-        }
-      });
+      try {
+        await agent.com.atproto.repo.createRecord({
+          repo: agent.session.did,
+          collection: 'app.bsky.graph.listitem',
+          record: {
+            $type: 'app.bsky.graph.listitem',
+            subject: did,
+            list: listUri,
+            createdAt: new Date().toISOString()
+          }
+        });
+        result.successful++;
+      } catch (error) {
+        result.failed++;
+        result.errors.push({
+          did,
+          error: error instanceof Error ? error.message : String(error)
+        });
+      }
     }
   }
+
+  return result;
 }
