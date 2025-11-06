@@ -71,3 +71,14 @@ export async function createJob(data: CreateJobData): Promise<Job> {
 
   return job;
 }
+
+export async function getJob(id: string): Promise<Job | null> {
+  const client = getKvClient();
+  const data = await client.get<string>(`job:${id}`);
+
+  if (!data) {
+    return null;
+  }
+
+  return JSON.parse(data) as Job;
+}

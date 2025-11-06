@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { Job } from './kv';
-import { getKvClient, createJob } from './kv';
+import { getKvClient, createJob, getJob } from './kv';
 
 describe('Job type definitions', () => {
   it('should enforce required job fields', () => {
@@ -127,5 +127,38 @@ describe('createJob', () => {
     expect(job.progress).toEqual({ current: 0, total: 0 });
     expect(job.errors).toEqual([]);
     expect(job.createdAt).toBeTruthy();
+  });
+});
+
+describe('getJob', () => {
+  it('should retrieve a job by ID', async () => {
+    const jobData = {
+      session: {
+        did: 'did:plc:test456',
+        handle: 'test2.bsky.social',
+        accessJwt: 'access.token2',
+        refreshJwt: 'refresh.token2'
+      },
+      sourceListUri: 'at://did:plc:test/app.bsky.graph.list/xyz',
+      destListName: 'Test List 2',
+      filters: {
+        excludeFollows: false,
+        excludeMutuals: true,
+        excludeListUris: []
+      }
+    };
+
+    const createdJob = await createJob(jobData);
+    const retrievedJob = await getJob(createdJob.id);
+
+    expect(retrievedJob).toBeDefined();
+    expect(retrievedJob?.id).toBe(createdJob.id);
+    expect(retrievedJob?.sourceListUri).toBe(jobData.sourceListUri);
+  });
+
+  it('should return null for non-existent job', async () => {
+    const job = await getJob('00000000-0000-0000-0000-000000000000');
+
+    expect(job).toBeNull();
   });
 });
