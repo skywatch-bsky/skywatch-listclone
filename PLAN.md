@@ -1,71 +1,100 @@
-# Phase 5: Background Processing Function
+# Phase 7: Clone Form UI
 
 ## Implementation Plan
 
-### Step 1: Filter Utilities (TDD)
-**File:** `src/lib/filters.ts`
+### Component 1: CloneForm.svelte
+**File:** `src/lib/components/CloneForm.svelte`
 
-**Tests First:** `src/lib/filters.test.ts`
-1. Test `applyFilters` with no filters (returns all DIDs)
-2. Test `applyFilters` with excludeFollows
-3. Test `applyFilters` with excludeMutuals
-4. Test `applyFilters` with excludeListUris (single list)
-5. Test `applyFilters` with multiple exclusion lists
-6. Test `applyFilters` with all filters combined
+**Form Fields:**
+1. `sourceListUrl` - text input (required)
+   - Validates Bluesky list URL pattern
+2. `destListName` - text input (required)
+3. `handle` - text input (required)
+4. `password` - password input (required)
+   - Hidden, with help text for app password generation
+5. `excludeFollows` - checkbox
+6. `excludeMutuals` - checkbox
+7. `excludeListUris` - textarea (optional)
+   - Parse newline-separated URLs
 
-**Implementation:**
-- `applyFilters(allDids: string[], filters: JobFilters, agent: AtpAgent): Promise<string[]>`
-- Use existing utilities: getUserFollows, getUserMutuals, fetchListMembers
-- Build exclusion set from all filter sources
-- Return filtered array
+**Behavior:**
+1. Form validation (all required fields)
+2. On submit:
+   - Show loading state
+   - POST to `/api/clone` with structured data
+   - On success: emit `success` event with `{ jobId }`
+   - On error: display inline error message
+3. Disable submit button while loading
+4. Clear form on success
 
-### Step 2: Process Endpoint (TDD)
-**File:** `src/routes/api/jobs/[id]/process/+server.ts`
+**API Integration:**
+```typescript
+POST /api/clone
+{
+  sourceListUrl: string,
+  destListName: string,
+  handle: string,
+  password: string,
+  filters: {
+    excludeFollows: boolean,
+    excludeMutuals: boolean,
+    excludeListUris: string[]
+  }
+}
+```
 
-**Tests First:** `src/routes/api/jobs/[id]/process/server.test.ts`
-1. Test 404 when job doesn't exist
-2. Test basic job processing (no filters)
-3. Test job processing with filters
-4. Test progress tracking updates
-5. Test error handling (individual member failures)
-6. Test critical error handling (auth failure, list creation failure)
-7. Test destination list URI is stored
-8. Test completedAt timestamp is set
+### Component 2: Main Page
+**File:** `src/routes/+page.svelte`
 
-**Implementation:**
-1. Extract jobId from params
-2. Load job from KV
-3. Return 404 if not found
-4. Update status to 'processing'
-5. Create AtpAgent and restore session
-6. Fetch source list members
-7. Update progress.total
-8. Apply filters
-9. Create destination list
-10. Store destListUri
-11. Add members in batches
-12. Update progress.current after each batch
-13. Track errors in job.errors
-14. Update status to 'completed' or 'failed'
-15. Set completedAt
-16. Return result JSON
+**Layout:**
+1. Header with title and description
+2. CloneForm component
+3. JobStatus component (conditional on jobId)
 
-### Step 3: Verification
-- All tests pass
-- Manual verification if possible
-- Commit with descriptive message
+**Flow:**
+1. User fills form → submits
+2. On success, store jobId in component state
+3. Show JobStatus component
+4. JobStatus polls for updates
+
+**Styling:**
+- Tailwind CSS (already configured)
+- Responsive design
+- Form validation states (red borders, error text)
+- Loading spinners
+
+### Implementation Steps
+
+1. **Create CloneForm.svelte**
+   - Build form structure with all fields
+   - Add validation logic
+   - Implement submit handler with API call
+   - Add loading/error states
+   - Emit success event
+
+2. **Update +page.svelte**
+   - Import CloneForm and JobStatus
+   - Add jobId state management
+   - Add header section
+   - Conditional rendering based on jobId
+   - Handle success event
+
+3. **Manual Testing**
+   - Run dev server
+   - Test form validation (empty fields)
+   - Test invalid URL format
+   - Test API integration with valid credentials
+   - Verify JobStatus appears after submission
+   - Verify progress polling works
+
+4. **Type Checking**
+   - Run `pnpm run check` to verify compilation
 
 ## Key Design Decisions
 
-1. **Best-effort processing:** Individual member failures don't fail the entire job
-2. **Session restoration:** Use `agent.session = job.session` to restore auth
-3. **Progress tracking:** Update after each batch for granular progress
-4. **Error tracking:** Store individual errors in job.errors array
-5. **Critical vs non-critical errors:**
-   - Critical: auth failure, list creation failure → status='failed'
-   - Non-critical: individual member add failures → continue processing
-
-## Dependencies
-- AtpAgent from @atproto/api
-- Existing utilities from src/lib/atproto.ts
-- Existing job management from src/lib/kv.ts
+1. **No automated component tests:** Manual testing is sufficient for UI components
+2. **Inline validation:** Show errors directly on form fields for better UX
+3. **Loading states:** Disable form and show spinner during submission
+4. **Event-driven:** CloneForm emits events rather than managing jobId directly
+5. **URL parsing:** Handle textarea input by splitting on newlines and trimming
+6. **Clear on success:** Optional form clearing after successful submission
