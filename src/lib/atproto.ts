@@ -63,3 +63,28 @@ export async function getUserFollows(agent: BskyAgent, did: string): Promise<str
 
   return follows;
 }
+
+export async function getUserMutuals(agent: BskyAgent, did: string): Promise<string[]> {
+  const follows = await getUserFollows(agent, did);
+  const followSet = new Set(follows);
+
+  const mutuals: string[] = [];
+  let cursor: string | undefined;
+
+  do {
+    const response = await agent.app.bsky.graph.getFollowers({
+      actor: did,
+      limit: 100,
+      cursor
+    });
+
+    const mutualFollowers = response.data.followers
+      .map(follower => follower.did)
+      .filter(followerDid => followSet.has(followerDid));
+
+    mutuals.push(...mutualFollowers);
+    cursor = response.data.cursor;
+  } while (cursor);
+
+  return mutuals;
+}
