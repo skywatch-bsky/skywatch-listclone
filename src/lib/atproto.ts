@@ -113,3 +113,35 @@ export async function createList(
 
   return response.data.uri;
 }
+
+export async function addListMembers(
+  agent: AtpAgent,
+  listUri: string,
+  memberDids: string[],
+  batchSize: number = 25
+): Promise<void> {
+  if (!agent.session) {
+    throw new Error('Agent must be authenticated to add list members');
+  }
+
+  if (memberDids.length === 0) {
+    return;
+  }
+
+  for (let i = 0; i < memberDids.length; i += batchSize) {
+    const batch = memberDids.slice(i, i + batchSize);
+
+    for (const did of batch) {
+      await agent.com.atproto.repo.createRecord({
+        repo: agent.session.did,
+        collection: 'app.bsky.graph.listitem',
+        record: {
+          $type: 'app.bsky.graph.listitem',
+          subject: did,
+          list: listUri,
+          createdAt: new Date().toISOString()
+        }
+      });
+    }
+  }
+}

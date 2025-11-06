@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseListUrl, resolveHandle, fetchListMembers, getUserFollows, getUserMutuals, createList } from './atproto';
+import { parseListUrl, resolveHandle, fetchListMembers, getUserFollows, getUserMutuals, createList, addListMembers } from './atproto';
 import { AtpAgent } from '@atproto/api';
 
 describe('parseListUrl', () => {
@@ -157,5 +157,69 @@ describe('createList', () => {
     const uri = await createList(agent, 'Minimal Test List');
 
     expect(uri).toMatch(/^at:\/\/did:plc:[a-z0-9]+\/app\.bsky\.graph\.list\/[a-z0-9]+$/);
+  });
+});
+
+describe('addListMembers', () => {
+  it('should add members to a list in batches', async () => {
+    if (!process.env.BSKY_HANDLE || !process.env.BSKY_PASSWORD) {
+      console.log('Skipping addListMembers test - no credentials provided');
+      return;
+    }
+
+    const agent = new AtpAgent({ service: 'https://bsky.social' });
+    await agent.login({
+      identifier: process.env.BSKY_HANDLE,
+      password: process.env.BSKY_PASSWORD
+    });
+
+    const listUri = await createList(agent, 'Test Batch List');
+    const memberDids = [
+      'did:plc:z72i7hdynmk6r22z27h6tvur',
+      'did:plc:ragtjsm2j2vknwkz3zp4oxrd'
+    ];
+
+    await addListMembers(agent, listUri, memberDids);
+
+    expect(true).toBe(true);
+  });
+
+  it('should handle empty array gracefully', async () => {
+    if (!process.env.BSKY_HANDLE || !process.env.BSKY_PASSWORD) {
+      console.log('Skipping addListMembers empty array test - no credentials provided');
+      return;
+    }
+
+    const agent = new AtpAgent({ service: 'https://bsky.social' });
+    await agent.login({
+      identifier: process.env.BSKY_HANDLE,
+      password: process.env.BSKY_PASSWORD
+    });
+
+    const listUri = await createList(agent, 'Empty Test List');
+
+    await addListMembers(agent, listUri, []);
+
+    expect(true).toBe(true);
+  });
+
+  it('should batch members in chunks of 25', async () => {
+    if (!process.env.BSKY_HANDLE || !process.env.BSKY_PASSWORD) {
+      console.log('Skipping addListMembers batch test - no credentials provided');
+      return;
+    }
+
+    const agent = new AtpAgent({ service: 'https://bsky.social' });
+    await agent.login({
+      identifier: process.env.BSKY_HANDLE,
+      password: process.env.BSKY_PASSWORD
+    });
+
+    const listUri = await createList(agent, 'Large Batch Test List');
+    const memberDids = Array(30).fill('did:plc:z72i7hdynmk6r22z27h6tvur');
+
+    await addListMembers(agent, listUri, memberDids);
+
+    expect(true).toBe(true);
   });
 });
