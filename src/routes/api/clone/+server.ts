@@ -74,6 +74,13 @@ export const POST: RequestHandler = async ({ request }) => {
       filters: body.filters
     });
 
+    // trigger processing in background (fire and forget)
+    const url = new URL(request.url);
+    const processUrl = `${url.origin}/api/jobs/${job.id}/process`;
+    fetch(processUrl, { method: 'POST' }).catch(err =>
+      console.error('Failed to trigger processing:', err)
+    );
+
     return json({ jobId: job.id });
   } catch (error) {
     console.error('Clone API error:', error);
