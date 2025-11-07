@@ -67,20 +67,16 @@ export async function createJob(data: CreateJobData): Promise<Job> {
   const client = getKvClient();
   const ttl = 60 * 60 * 24 * 7;
 
-  await client.set(`job:${job.id}`, JSON.stringify(job), { ex: ttl });
+  await client.set(`job:${job.id}`, job, { ex: ttl });
 
   return job;
 }
 
 export async function getJob(id: string): Promise<Job | null> {
   const client = getKvClient();
-  const data = await client.get<string>(`job:${id}`);
+  const data = await client.get<Job>(`job:${id}`);
 
-  if (!data) {
-    return null;
-  }
-
-  return JSON.parse(data) as Job;
+  return data;
 }
 
 export type JobUpdate = Partial<Omit<Job, 'id' | 'createdAt'>>;
@@ -100,7 +96,7 @@ export async function updateJob(id: string, updates: JobUpdate): Promise<Job | n
   const client = getKvClient();
   const ttl = 60 * 60 * 24 * 7;
 
-  await client.set(`job:${id}`, JSON.stringify(updatedJob), { ex: ttl });
+  await client.set(`job:${id}`, updatedJob, { ex: ttl });
 
   return updatedJob;
 }
