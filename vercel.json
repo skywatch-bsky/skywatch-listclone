@@ -1,11 +1,5 @@
 {
-  "framework": "sveltekit",
   "buildCommand": "pnpm run build",
   "devCommand": "pnpm run dev",
-  "installCommand": "pnpm install",
-  "functions": {
-    "api/**/*.ts": {
-      "maxDuration": 60
-    }
-  }
+  "installCommand": "pnpm install"
 }
